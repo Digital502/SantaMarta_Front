@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const apiClient = axios.create({
-    baseURL: "http://localhost:3001/santaMarta/api/v1/",
+    baseURL: "https://santamarta-5ozw.onrender.com/santaMarta/api/v1/",
     timeout: 3000,
     httpsAgent: false
 });

@@ -150,17 +150,6 @@ export const Login = () => {
           >
             {isLoading ? "Cargando..." : "Ingresar"}
           </motion.button>
-
-          <p className="text-center text-sm mt-4 text-[#CBD5E1]">
-            ¿Olvidaste tu contraseña?{" "}
-            <button
-              type="button"
-              onClick={() => navigate("/forgot-password")}
-              className="text-[#86AFB9] hover:underline"
-            >
-              Haz clic aquí
-            </button>
-          </p>
         </form>
       </motion.div>
     </div>
