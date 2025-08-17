@@ -4,6 +4,7 @@ import { Footer } from "../footer/Footer";
 import { useFactura } from "../../shared/hooks/useFactura";
 import { X, Download, Edit, Trash2, Search } from "lucide-react";
 import toast from "react-hot-toast";
+import { useCompra } from "../../shared/hooks/useCompra";
 
 export const Factura = () => {
   const {
@@ -16,6 +17,10 @@ export const Factura = () => {
     editFactura,
     removeFactura,
   } = useFactura();
+
+  const {
+    verFactura
+  } = useCompra()
 
   const [showModal, setShowModal] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -368,13 +373,12 @@ export const Factura = () => {
                     </div>
                     <div className="flex justify-end gap-3 pt-6 border-t border-gray-200 mt-4">
                     <button
-                        onClick={() => setIsEditing(true)}
-                        className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[#426A73] text-white hover:bg-[#2B535C] transition-colors"
+                      onClick={() => verFactura(facturaSeleccionada.noFactura)}
+                      className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[#426A73] text-white hover:bg-[#2B535C] transition-colors"
                     >
-                        <Download size={18} />
-                        Descargar Factura
+                      <Download size={18} />
+                      Descargar Factura
                     </button>
-
                     <button
                         onClick={() => setIsEditing(true)}
                         className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[#426A73] text-white hover:bg-[#2B535C] transition-colors"
