@@ -14,16 +14,16 @@ export const Footer = () => {
           <div>
             <h3 className="text-base font-semibold mb-2">Contacto</h3>
             <p className="text-sm text-gray-300">
-              contacto@redentordlc.org<br />
-              +502 1234 5678
+              hermandadsantamartazona3@gmail.com<br />
+              +502 53232664
             </p>
           </div>
           <div>
             <h3 className="text-base font-semibold mb-2">Redes Sociales</h3>
             <div className="flex justify-center md:justify-start space-x-4">
-              <a href="#" className="hover:text-gray-400 transition">Facebook</a>
-              <a href="#" className="hover:text-gray-400 transition">Instagram</a>
-              <a href="#" className="hover:text-gray-400 transition">TikTok</a>
+              <a href="https://www.facebook.com/RedentorDC" className="hover:text-gray-400 transition">Facebook</a>
+              <a href="https://www.instagram.com/redentordc?utm_source=ig_web_button_share_sheet&igsh=enM5NjNvMng4a3g2" className="hover:text-gray-400 transition">Instagram</a>
+              <a href="https://www.tiktok.com/@redentor_dc?is_from_webapp=1&sender_device=pc" className="hover:text-gray-400 transition">TikTok</a>
             </div>
           </div>
           <div>
