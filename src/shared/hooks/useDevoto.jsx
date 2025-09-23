@@ -5,7 +5,8 @@ import {
   getDevotoById,
   updateDevoto,
   deleteDevoto,
-  getDevotoByTurno
+  getDevotoByTurno,
+  getSearchDevoto
 } from "../../services/api";
 import toast from "react-hot-toast";
 
@@ -15,6 +16,7 @@ export const useDevoto = () => {
   const [loading, setLoading] = useState(false);
   const [devoto, setDevoto] = useState(null);
   const [error, setError] = useState(null);
+  const [searchResults, setSearchResults] = useState([]); 
 
   const fetchDevotos = async () => {
     setLoading(true);
@@ -87,19 +89,36 @@ export const useDevoto = () => {
     setLoading(false);
   };
 
+  const searchDevotos = async (query) => {
+    if (!query || query.trim().length < 4) {
+      setSearchResults([]);
+      return;
+    }
+    setLoading(true);
+    const response = await getSearchDevoto(query);
+    if (!response.error) {
+      setSearchResults(response.devotos || []);
+    } else {
+      setError("Error en la búsqueda de devotos.");
+    }
+    setLoading(false);
+  };
+
   useEffect(() => {
     fetchDevotos();
   }, []);
 
   return {
     devotos,
-    devotosPorTurno, // 🔹 lista filtrada por turno
+    devotosPorTurno, 
+    searchResults,
     devoto,
     loading,
     error,
     fetchDevotos,
     fetchDevotoById,
-    fetchDevotosByTurno, // 🔹 nueva función
+    fetchDevotosByTurno, 
+    searchDevotos,
     createDevoto,
     editDevoto,
     removeDevoto,

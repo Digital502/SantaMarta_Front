@@ -474,3 +474,15 @@ export const reservarTurno = async (data) => {
         }
     }
 }
+
+export const getSearchDevoto = async (query) => {
+  try {
+    const response = await apiClient.get(`/devoto/search?q=${query}`);
+    return response.data;
+  } catch (e) {
+    return {
+      error: true,
+      e,
+    };
+  }
+};

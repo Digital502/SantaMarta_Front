@@ -12,11 +12,12 @@ import { NavbarUser } from "../navs/NavbarUser";
 export const RegistrarCompra = () => {
   const { createCompra, loading, verFactura } = useCompra();
   const { devotos, fetchDevotos } = useDevoto();
+  const { searchResults, searchDevotos } = useDevoto();
   const { procesiones, fetchProcesiones } = useProcesion();
   const { turnosPorProcesion, fetchTurnosByProcesion } = useTurno();
   const user = JSON.parse(localStorage.getItem("user"));
   const NavbarToShow = user?.role === "ROL_DIRECTIVO" ? <NavbarAdmin /> : <NavbarUser />;
-  
+
   const [form, setForm] = useState({
     procesion: "",
     devoto: "",
@@ -40,19 +41,24 @@ export const RegistrarCompra = () => {
   }, []);
 
   const handleDevotoSearch = (value) => {
-    setSearchInputs({...searchInputs, devoto: value});
+    setSearchInputs({ ...searchInputs, devoto: value });
     setFilteredDevotos(
-      devotos.filter(d => 
+      devotos.filter(d =>
         `${d.nombre} ${d.apellido} ${d.DPI}`.toLowerCase().includes(value.toLowerCase())
       )
     );
-    setShowDevotoList(value.length > 0);
+    if (value.length > 1) {
+      searchDevotos(value);
+      setShowDevotoList(true);
+    } else {
+      setShowDevotoList(false);
+    }
   };
 
   const handleTurnoSearch = (value) => {
-    setSearchInputs({...searchInputs, turno: value});
+    setSearchInputs({ ...searchInputs, turno: value });
     setFilteredTurnos(
-      turnosPorProcesion.filter(t => 
+      turnosPorProcesion.filter(t =>
         `${t.noTurno} - ${t.marcha}`.toLowerCase().includes(value.toLowerCase())
       )
     );
@@ -61,8 +67,8 @@ export const RegistrarCompra = () => {
 
   const handleProcesionChange = (e) => {
     const id = e.target.value;
-    setForm({...form, procesion: id, turno: ""});
-    setSearchInputs({...searchInputs, turno: ""});
+    setForm({ ...form, procesion: id, turno: "" });
+    setSearchInputs({ ...searchInputs, turno: "" });
     if (id) fetchTurnosByProcesion(id);
   };
 
@@ -70,38 +76,39 @@ export const RegistrarCompra = () => {
   const handleSelectTurno = (turnoId) => {
     const turno = turnosPorProcesion.find(t => t.uid === turnoId);
     if (!turno) return;
-    
+
     if (turno.cantidadSinVender === 0) {
       toast.error("Este turno ya no está disponible.");
       return;
     }
-    
+
     if (turno.cantidadSinVender <= 3) {
-      toast(`Solo quedan ${turno.cantidadSinVender} turnos disponibles`, { 
-        icon: <AlertTriangle className="text-yellow-500" /> 
+      toast(`Solo quedan ${turno.cantidadSinVender} turnos disponibles`, {
+        icon: <AlertTriangle className="text-yellow-500" />
       });
     }
-    
-    setForm({...form, turno: turnoId});
-    setSearchInputs({...searchInputs, turno: `${turno.noTurno} - ${turno.marcha}`});
+
+    setForm({ ...form, turno: turnoId });
+    setSearchInputs({ ...searchInputs, turno: `${turno.noTurno} - ${turno.marcha}` });
     setShowTurnoList(false);
   };
 
-  // Seleccionar devoto
   const handleSelectDevoto = (devoto) => {
-    setForm({...form, devoto: devoto._id});
-    setSearchInputs({...searchInputs, devoto: `${devoto.nombre} ${devoto.apellido} - ${devoto.DPI}`});
+    setForm({ ...form, devoto: devoto.uid });
+    setSearchInputs({
+      ...searchInputs,
+      devoto: `${devoto.nombre} ${devoto.apellido} - ${devoto.DPI}`
+    });
     setShowDevotoList(false);
   };
 
-  // Enviar formulario
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!form.devoto || !form.turno) {
       toast.error("Debes seleccionar devoto y turno");
       return;
     }
-    
+
     const res = await createCompra({
       devoto: form.devoto,
       turno: form.turno,
@@ -135,7 +142,7 @@ export const RegistrarCompra = () => {
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-b from-[#f0f7fa] to-[#e0f0f5]">
       {NavbarToShow}
-      
+
       <main className="flex-grow container mx-auto px-4 py-8 max-w-2xl">
         <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
           {/* Encabezado */}
@@ -147,10 +154,10 @@ export const RegistrarCompra = () => {
             <p className="text-[#e0f0f5] mt-1">Complete los datos requeridos para registrar una compra</p>
           </div>
           <br />
-            <p className="text-1lx italic text-center text-[#2B535C]">
-                “La Misa es el acto de adoración más perfecto que podemos ofrecer a Dios”<br />
-                <span className="not-italic font-medium">— San Francisco de Sales</span>
-            </p>
+          <p className="text-1lx italic text-center text-[#2B535C]">
+            “La Misa es el acto de adoración más perfecto que podemos ofrecer a Dios”<br />
+            <span className="not-italic font-medium">— San Francisco de Sales</span>
+          </p>
           {/* Formulario */}
           <form onSubmit={handleSubmit} className="p-6 md:p-8 space-y-6">
             {/* Procesión */}
@@ -190,12 +197,12 @@ export const RegistrarCompra = () => {
                   required
                 />
               </div>
-              
-              {showDevotoList && filteredDevotos.length > 0 && (
+
+              {showDevotoList && searchResults.length > 0 && (
                 <ul className="absolute z-10 mt-1 w-full border border-gray-200 rounded-lg bg-white shadow-lg max-h-60 overflow-y-auto">
-                  {filteredDevotos.map(d => (
+                  {searchResults.map(d => (
                     <li
-                      key={d.uid}
+                      key={d._id}
                       onClick={() => handleSelectDevoto(d)}
                       className="px-4 py-3 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-0 flex justify-between items-center"
                     >
@@ -203,9 +210,6 @@ export const RegistrarCompra = () => {
                         <p className="font-medium text-gray-900">{d.nombre} {d.apellido}</p>
                         <p className="text-sm text-gray-500">{d.DPI}</p>
                       </div>
-                      {form.devoto === d.uid && (
-                        <Check className="text-[#426A73]" size={18} />
-                      )}
                     </li>
                   ))}
                 </ul>
@@ -229,7 +233,7 @@ export const RegistrarCompra = () => {
                   required
                 />
               </div>
-              
+
               {showTurnoList && filteredTurnos.length > 0 && (
                 <ul className="absolute z-10 mt-1 w-full border border-gray-200 rounded-lg bg-white shadow-lg max-h-60 overflow-y-auto">
                   {filteredTurnos.map(t => (
@@ -243,13 +247,12 @@ export const RegistrarCompra = () => {
                           <p className="font-medium text-gray-900">Turno #{t.noTurno}</p>
                           <p className="text-sm text-gray-600">{t.marcha}</p>
                         </div>
-                        <span className={`px-2 py-1 text-xs rounded-full ${
-                          t.cantidadSinVender > 3 
-                            ? "bg-green-100 text-green-800" 
-                            : t.cantidadSinVender > 0 
-                              ? "bg-yellow-100 text-yellow-800" 
-                              : "bg-red-100 text-red-800"
-                        }`}>
+                        <span className={`px-2 py-1 text-xs rounded-full ${t.cantidadSinVender > 3
+                          ? "bg-green-100 text-green-800"
+                          : t.cantidadSinVender > 0
+                            ? "bg-yellow-100 text-yellow-800"
+                            : "bg-red-100 text-red-800"
+                          }`}>
                           {t.cantidadSinVender} disponibles
                         </span>
                       </div>
@@ -272,9 +275,8 @@ export const RegistrarCompra = () => {
               <button
                 type="submit"
                 disabled={loading}
-                className={`flex-1 py-3 px-6 rounded-lg text-white font-bold transition flex items-center justify-center ${
-                  loading ? "bg-gray-400 cursor-not-allowed" : "bg-[#426A73] hover:bg-[#2B535C]"
-                }`}
+                className={`flex-1 py-3 px-6 rounded-lg text-white font-bold transition flex items-center justify-center ${loading ? "bg-gray-400 cursor-not-allowed" : "bg-[#426A73] hover:bg-[#2B535C]"
+                  }`}
               >
                 {loading ? (
                   <>
@@ -289,7 +291,7 @@ export const RegistrarCompra = () => {
           </form>
         </div>
       </main>
-      
+
       <Footer />
     </div>
   );
