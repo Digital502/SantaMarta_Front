@@ -150,7 +150,11 @@ export const PagoComision = () => {
                   <li
                     key={`${d._id}-${index}`}
                     className="p-3 hover:bg-purple-50 cursor-pointer transition-colors duration-200"
-                    onClick={() => setDevotoSeleccionado(d._id)}
+                    onClick={() => {
+                      setDevotoSeleccionado(d.uid);
+                      setBusqueda(`${d.nombre} ${d.apellido}`);
+                      fetchDevotoById(d.uid); 
+                    }}
                   >
                     <div className="flex items-center">
                       <div className="bg-[#142130]-100 p-2 rounded-full mr-3">
