@@ -36,7 +36,7 @@ export const pdfDatosDevotos = async (devotos) => {
     div.style.flexDirection = "column";
     div.style.justifyContent = "center";
     div.style.backgroundColor = "white";
-    div.style.padding = "10px 15px";
+    div.style.padding = "6px 12px";
     div.style.border = "1px solid #ddd";
     div.style.borderRadius = "5px";
     div.style.fontFamily = "'Merriweather', serif";
@@ -44,10 +44,10 @@ export const pdfDatosDevotos = async (devotos) => {
 
     // Contenido interno similar al de la imagen
     div.innerHTML = `
-      <div style="font-size: 16px; font-weight: bold; margin-bottom: 10px;">
+      <div style="font-size: 12px; font-weight: bold; margin-bottom: 5px;">
         ${devoto.nombre || ""}
       </div>
-      <div style="display: flex; justify-content: space-between; font-size: 12px;">
+      <div style="display: flex; justify-content: space-between; font-size: 11px;">
         <div>
           <div style="font-weight: bold; margin-bottom: 2px;">Contraseña</div>
           <div>${devoto.contraseña || ""}</div>

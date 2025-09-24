@@ -486,3 +486,15 @@ export const getSearchDevoto = async (query) => {
     };
   }
 };
+
+export const getDevotosPaginacion = async (page, limit) => {
+  try {
+    const response = await apiClient.get(`/devoto/getDevotosPaginacion?page=${page}&limit=${limit}`);
+    return response.data;
+  } catch (e) {
+    return {
+      error: true,
+        e, 
+    };
+  }
+};
