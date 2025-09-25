@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useDevoto } from "../../shared/hooks/useDevoto";
 import { Edit, Trash2, X } from "lucide-react";
 import { toast } from "react-hot-toast";
@@ -6,7 +6,21 @@ import { Footer } from "../footer/Footer";
 import { NavbarAdmin } from "../navs/NavbarAdmin";
 
 export const ListDevoto = () => {
-  const { devotos, loading, removeDevoto, fetchDevotoById, editDevoto, page, totalPages, fetchDevotosPaginacion } = useDevoto();
+  const {
+    devotos,
+    loading,
+    removeDevoto,
+    fetchDevotoById,
+    editDevoto,
+    page,
+    totalPages,
+    fetchDevotosPaginacion,
+    searchDevotos,
+    searchResults,
+    searchQuery,
+    searchPage,
+    searchTotalPages,
+  } = useDevoto();
 
   const [selectedDevoto, setSelectedDevoto] = useState(null);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
@@ -21,6 +35,12 @@ export const ListDevoto = () => {
   });
   const [searchTerm, setSearchTerm] = useState("");
   const [filtroEstado, setFiltroEstado] = useState("");
+
+  useEffect(() => {
+    if (searchTerm.trim().length >= 4) {
+      searchDevotos(searchTerm, 1);
+    }
+  }, [searchTerm]);
 
   const handleViewDetails = async (id) => {
     const response = await fetchDevotoById(id);
@@ -73,16 +93,27 @@ export const ListDevoto = () => {
     return matchSearch && tieneEstado;
   });
 
+  const lista = searchQuery ? searchResults : devotos;
+  const currentPage = searchQuery ? searchPage : page;
+  const totalPaginas = searchQuery ? searchTotalPages : totalPages;
+
+  const filteredDevotosList = lista.filter((d) => {
+    if (!filtroEstado) return true;
+    return d.turnos?.some((t) => t.estadoPago === filtroEstado);
+  });
+
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
       <NavbarAdmin />
 
       <main className="flex-grow container mx-auto px-6 py-8">
         <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Listado de Devotos</h1>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            Listado de Devotos
+          </h1>
           <input
             type="text"
-            placeholder="Buscar por nombre, apellido, DPI o email..."
+            placeholder="Buscar (mínimo 4 letras)..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full md:w-72 rounded-md border border-gray-300 px-4 py-2 text-gray-700
@@ -106,11 +137,21 @@ export const ListDevoto = () => {
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-[#426A73] text-white">
               <tr>
-                <th className="px-6 py-3 text-left text-sm font-semibold">Nombre</th>
-                <th className="px-6 py-3 text-left text-sm font-semibold">Apellido</th>
-                <th className="px-6 py-3 text-left text-sm font-semibold">DPI</th>
-                <th className="px-6 py-3 text-left text-sm font-semibold">Email</th>
-                <th className="px-6 py-3 text-center text-sm font-semibold">Acciones</th>
+                <th className="px-6 py-3 text-left text-sm font-semibold">
+                  Nombre
+                </th>
+                <th className="px-6 py-3 text-left text-sm font-semibold">
+                  Apellido
+                </th>
+                <th className="px-6 py-3 text-left text-sm font-semibold">
+                  DPI
+                </th>
+                <th className="px-6 py-3 text-left text-sm font-semibold">
+                  Email
+                </th>
+                <th className="px-6 py-3 text-center text-sm font-semibold">
+                  Acciones
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
@@ -120,24 +161,32 @@ export const ListDevoto = () => {
                     Cargando devotos...
                   </td>
                 </tr>
-              ) : filteredDevotos.length === 0 ? (
+              ) : filteredDevotosList.length === 0 ? (
                 <tr>
                   <td colSpan={5} className="text-center py-8 text-gray-500">
                     No se encontraron devotos.
                   </td>
                 </tr>
               ) : (
-                filteredDevotos.map((devoto) => (
+                filteredDevotosList.map((devoto) => (
                   <tr
-                    key={devoto._id}
+                    key={devoto.uid}
                     className="hover:bg-gray-100 cursor-pointer"
-                    onClick={() => handleViewDetails(devoto._id)}
+                    onClick={() => handleViewDetails(devoto.uid)}
                     title="Ver detalles"
                   >
-                    <td className="px-6 py-4 whitespace-nowrap">{devoto.nombre}</td>
-                    <td className="px-6 py-4 whitespace-nowrap">{devoto.apellido}</td>
-                    <td className="px-6 py-4 whitespace-nowrap">{devoto.DPI}</td>
-                    <td className="px-6 py-4 whitespace-nowrap">{devoto.email}</td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {devoto.nombre}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {devoto.apellido}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {devoto.DPI}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {devoto.email}
+                    </td>
                     <td className="px-6 py-4 whitespace-nowrap text-center space-x-3">
                       <button
                         onClick={(e) => {
@@ -161,13 +210,17 @@ export const ListDevoto = () => {
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
-                          handleDelete(devoto._id);
+                          handleDelete(devoto.uid);
                         }}
-                        className={`transition ${deleteConfirm === devoto._id
-                          ? "text-white bg-red-600 hover:bg-red-700 rounded px-2"
-                          : "text-red-600 hover:bg-red-50 rounded px-2"
+                        className={`transition ${deleteConfirm === devoto.uid
+                            ? "text-white bg-red-600 hover:bg-red-700 rounded px-2"
+                            : "text-red-600 hover:bg-red-50 rounded px-2"
                           }`}
-                        title={deleteConfirm === devoto._id ? "Confirmar eliminación" : "Eliminar"}
+                        title={
+                          deleteConfirm === devoto.uid
+                            ? "Confirmar eliminación"
+                            : "Eliminar"
+                        }
                       >
                         <Trash2 size={20} />
                       </button>
@@ -177,31 +230,39 @@ export const ListDevoto = () => {
               )}
             </tbody>
           </table>
+
           <div className="flex justify-center items-center gap-6 mt-8">
             <button
-              onClick={() => fetchDevotosPaginacion(page - 1)}
-              disabled={page <= 1}
+              onClick={() =>
+                searchQuery
+                  ? searchDevotos(searchQuery, currentPage - 1)
+                  : fetchDevotosPaginacion(currentPage - 1)
+              }
+              disabled={currentPage <= 1}
               className="px-5 py-2.5 rounded-2xl bg-[#426A73] text-white font-semibold shadow-md hover:scale-105 hover:shadow-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Anterior
             </button>
 
             <span className="text-base font-semibold text-[#2B535C] bg-[#EAF2F4] px-5 py-2.5 rounded-2xl shadow-inner border border-[#86AFB9]/40">
-              Página <span className="text-[#426A73]">{page}</span> de{" "}
-              <span className="text-[#59818B]">{totalPages}</span>
+              Página <span className="text-[#426A73]">{currentPage}</span> de{" "}
+              <span className="text-[#59818B]">{totalPaginas}</span>
             </span>
+
             <button
-              onClick={() => fetchDevotosPaginacion(page + 1)}
-              disabled={page >= totalPages}
+              onClick={() =>
+                searchQuery
+                  ? searchDevotos(searchQuery, currentPage + 1)
+                  : fetchDevotosPaginacion(currentPage + 1)
+              }
+              disabled={currentPage >= totalPaginas}
               className="px-5 py-2.5 rounded-2xl bg-[#2B535C] text-white font-semibold shadow-md hover:scale-105 hover:shadow-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Siguiente
             </button>
           </div>
-          <br />
         </div>
       </main>
-
       {showDetailsModal && (
         <div className="fixed inset-0 bg-transparent flex items-center justify-center z-50 p-4 sm:p-6"
           style={{

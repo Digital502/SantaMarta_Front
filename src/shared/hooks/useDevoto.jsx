@@ -6,7 +6,7 @@ import {
   updateDevoto,
   deleteDevoto,
   getDevotoByTurno,
-  getSearchDevoto,
+  getSearchDevotos,   // 👈 ojo: aquí usa el plural
   getDevotosPaginacion
 } from "../../services/api";
 import toast from "react-hot-toast";
@@ -17,7 +17,15 @@ export const useDevoto = () => {
   const [loading, setLoading] = useState(false);
   const [devoto, setDevoto] = useState(null);
   const [error, setError] = useState(null);
-  const [searchResults, setSearchResults] = useState([]); 
+
+  // 🔎 Estados para búsqueda
+  const [searchResults, setSearchResults] = useState([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchPage, setSearchPage] = useState(1);
+  const [searchTotalPages, setSearchTotalPages] = useState(1);
+  const [searchTotal, setSearchTotal] = useState(0);
+
+  // 📄 Estados para paginación general
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
   const [totalPages, setTotalPages] = useState(1);
@@ -61,7 +69,6 @@ export const useDevoto = () => {
     return response;
   };
 
-  // 🔹 Obtener devotos por ID de turno
   const fetchDevotosByTurno = async (turnoId) => {
     setLoading(true);
     const response = await getDevotoByTurno(turnoId);
@@ -109,15 +116,21 @@ export const useDevoto = () => {
     setLoading(false);
   };
 
-  const searchDevotos = async (query) => {
+  // 🔎 Buscar con paginación en backend
+  const searchDevotos = async (query, newPage = 1, newLimit = limit) => {
     if (!query || query.trim().length < 4) {
       setSearchResults([]);
+      setSearchQuery("");
       return;
     }
     setLoading(true);
-    const response = await getSearchDevoto(query);
+    const response = await getSearchDevotos(query, newPage, newLimit);
     if (!response.error) {
       setSearchResults(response.devotos || []);
+      setSearchQuery(query);
+      setSearchPage(response.page);
+      setSearchTotal(response.total);
+      setSearchTotalPages(response.totalPages);
     } else {
       setError("Error en la búsqueda de devotos.");
     }
@@ -129,25 +142,37 @@ export const useDevoto = () => {
   }, [limit]);
 
   return {
+    // datos normales
     devotos,
-    devotosPorTurno, 
-    searchResults,
+    devotosPorTurno,
     devoto,
     loading,
     error,
-    fetchDevotos,
-    fetchDevotosPaginacion,
-    fetchDevotoById,
-    fetchDevotosByTurno, 
-    searchDevotos,
-    createDevoto,
-    editDevoto,
-    removeDevoto,
+
+    // paginación general
     page,
     limit,
     total,
     totalPages,
     setPage,
-    setLimit
+    setLimit,
+
+    // búsqueda
+    searchResults,
+    searchQuery,
+    searchPage,
+    searchTotal,
+    searchTotalPages,
+    searchDevotos,
+    setSearchPage,
+
+    // acciones
+    fetchDevotos,
+    fetchDevotosPaginacion,
+    fetchDevotoById,
+    fetchDevotosByTurno,
+    createDevoto,
+    editDevoto,
+    removeDevoto,
   };
 };
