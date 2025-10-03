@@ -135,50 +135,61 @@ export const DevotosByTurno = () => {
                     <p className="mt-2 text-gray-600">Cargando devotos...</p>
                   </div>
                 ) : devotosPorTurno.length > 0 ? (
-                    <>
-                        <div className="bg-gradient-to-r from-[#426A73] to-[#2B535C] px-6 py-4">
-                        <h2 className="text-lg font-semibold text-white flex items-center gap-2">
-                            <Users size={20} />
-                            <span>Devotos del Turno Seleccionado ({devotosPorTurno.length})</span>
-                        </h2>
-                        </div>  
-                        <ul className="divide-y divide-gray-100">
-                        {devotosPorTurno.map((d, index) => (
+                  <>
+                    <div className="bg-gradient-to-r from-[#426A73] to-[#2B535C] px-6 py-4">
+                      <h2 className="text-lg font-semibold text-white flex items-center gap-2">
+                        <Users size={20} />
+                        <span>Devotos del Turno Seleccionado ({devotosPorTurno.length})</span>
+                      </h2>
+                    </div>
+                    <ul className="divide-y divide-gray-100">
+                      {devotosPorTurno.map((d, index) => (
                         <li
-                            key={index}
-                            className="px-6 py-4 hover:bg-gray-50 transition-colors duration-150"
+                          key={index}
+                          className="px-6 py-4 hover:bg-gray-50 transition-colors duration-150"
                         >
-                            <div className="flex items-center justify-between">
+                          <div className="flex items-center justify-between">
                             {/* Info nombre y turno a la izquierda */}
                             <div>
-                                <h3 className="font-medium text-gray-900 text-lg">{d.nombre}</h3>
-                                <p className="text-sm text-gray-700">No. Turno: {d.noTurno}</p>
+                              <h3 className="font-medium text-gray-900 text-lg">{d.nombre}</h3>
+                              <p className="text-sm text-gray-700">No. Turno: {d.noTurno}</p>
+                              <p
+                                className={`text-sm font-semibold px-3 py-0 rounded-xl shadow-md inline-block
+                                   ${d.estadoPago === "PAGADO"
+                                    ? "bg-[#2B535C] text-white"
+                                    : d.estadoPago === "NO_PAGADO"
+                                      ? "bg-[#86AFB9] text-white"
+                                      : "bg-[#86AFB9] text-white"
+                                  }`}
+                              >
+                                 {d.estadoPago}
+                              </p>
                             </div>
 
                             {/* Contraseña a la derecha, tamaño medio */}
                             <div className="text-lg font-semibold text-[#426A73] select-text">
-                                {d.contraseña}
+                              {d.contraseña}
                             </div>
-                            </div>
+                          </div>
                         </li>
-                        ))}
-                        </ul>
-                        <div className="bg-gray-50 px-6 py-4 border-t flex flex-wrap gap-3 justify-end">
-                        <button className="px-4 py-2.5 rounded-lg bg-gradient-to-r from-[#426A73] to-[#2B535C] text-white hover:from-emerald-600 hover:to-green-700 transition-all shadow-md flex items-center gap-2 text-sm font-medium">
-                            <Download size={16} className="text-white/90" />
-                            Descargar Contraseñas
-                        </button>
-                        <button 
-                            onClick={() => pdfDatosDevotos(devotosPorTurno)}
-                            className="px-4 py-2.5 rounded-lg bg-gradient-to-r from-[#426A73] to-[#2B535C] text-white hover:from-[#2B535C] hover:to-[#426A73] transition-all shadow-md flex items-center gap-2 text-sm font-medium">
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
-                            </svg>
-                            Descargar Datos de Devoto
-                        </button>
-                        </div>
-                    </>
-                    ) : (
+                      ))}
+                    </ul>
+                    <div className="bg-gray-50 px-6 py-4 border-t flex flex-wrap gap-3 justify-end">
+                      <button className="px-4 py-2.5 rounded-lg bg-gradient-to-r from-[#426A73] to-[#2B535C] text-white hover:from-emerald-600 hover:to-green-700 transition-all shadow-md flex items-center gap-2 text-sm font-medium">
+                        <Download size={16} className="text-white/90" />
+                        Descargar Contraseñas
+                      </button>
+                      <button
+                        onClick={() => pdfDatosDevotos(devotosPorTurno)}
+                        className="px-4 py-2.5 rounded-lg bg-gradient-to-r from-[#426A73] to-[#2B535C] text-white hover:from-[#2B535C] hover:to-[#426A73] transition-all shadow-md flex items-center gap-2 text-sm font-medium">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                        </svg>
+                        Descargar Datos de Devoto
+                      </button>
+                    </div>
+                  </>
+                ) : (
                   <div className="p-8 text-center">
                     <Users className="mx-auto h-10 w-10 text-gray-400" />
                     <h3 className="mt-2 text-lg font-medium text-gray-900">

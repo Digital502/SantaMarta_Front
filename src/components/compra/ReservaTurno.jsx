@@ -10,7 +10,16 @@ import { useCompra } from "../../shared/hooks/useCompra";
 import { toast } from "react-hot-toast";
 
 export const ReservaTurno = () => {
-  const { devotos, fetchDevotoById, devoto } = useDevoto();
+  // ahora desestructuramos todo desde el hook (si existe searchDevotos/searchResults, se usarán)
+  const {
+    devotos,
+    fetchDevotoById,
+    devoto,
+    fetchDevotos,
+    searchResults = [],
+    searchDevotos
+  } = useDevoto();
+
   const { procesiones, fetchProcesiones } = useProcesion();
   const { turnosPorProcesion, fetchTurnosByProcesion } = useTurno();
   const { reservar, loading: loadingReserva } = useReserva();
@@ -18,33 +27,48 @@ export const ReservaTurno = () => {
 
   const [busqueda, setBusqueda] = useState("");
   const [sugerencias, setSugerencias] = useState([]);
+  const [showDevotoList, setShowDevotoList] = useState(false);
+
   const [devotoSeleccionado, setDevotoSeleccionado] = useState("");
   const [procesionSeleccionada, setProcesionSeleccionada] = useState("");
   const [turnoSeleccionado, setTurnoSeleccionado] = useState("");
   const [tipoReserva, setTipoReserva] = useState("");
 
-  // Filtrar devotos
   useEffect(() => {
-    if (!busqueda.trim()) return setSugerencias([]);
-    const term = busqueda.toLowerCase();
+    fetchProcesiones();
+    if (typeof fetchDevotos === "function") fetchDevotos();
+  }, []);
 
-    const filtrados = devotos.filter((d) => {
-      const nombre = d.nombre?.toLowerCase() || "";
-      const apellido = d.apellido?.toLowerCase() || "";
-      const dpi = d.DPI?.toLowerCase() || "";
+  useEffect(() => {
+    if (!busqueda || !busqueda.trim()) {
+      setSugerencias([]);
+      setShowDevotoList(false);
+      return;
+    }
+
+    const term = busqueda.toLowerCase();
+    const filtrados = (devotos || []).filter((d) => {
+      const nombre = (d.nombre || "").toLowerCase();
+      const apellido = (d.apellido || "").toLowerCase();
+      const dpi = (d.DPI || "").toLowerCase();
       const nombreCompleto = `${nombre} ${apellido}`.trim();
       return (
         nombre.includes(term) ||
         apellido.includes(term) ||
         nombreCompleto.includes(term) ||
         dpi.includes(term)
-      )
+      );
     });
 
     setSugerencias(filtrados);
-  }, [busqueda, devotos]);
 
-  // Cargar devoto
+    if (busqueda.length > 1 && typeof searchDevotos === "function") {
+      searchDevotos(busqueda);
+    }
+
+    setShowDevotoList(true);
+  }, [busqueda]);   
+
   useEffect(() => {
     if (devotoSeleccionado) {
       fetchDevotoById(devotoSeleccionado);
@@ -54,7 +78,6 @@ export const ReservaTurno = () => {
     }
   }, [devotoSeleccionado]);
 
-  // Cargar turnos por procesión
   useEffect(() => {
     if (procesionSeleccionada) {
       fetchTurnosByProcesion(procesionSeleccionada);
@@ -63,10 +86,15 @@ export const ReservaTurno = () => {
     }
   }, [procesionSeleccionada]);
 
-  // Filtrar turnos ordinarios
-  const turnosOrdinarios = turnosPorProcesion.filter(
+  // Filtrar solo turnos ordinarios
+  const turnosOrdinarios = (turnosPorProcesion || []).filter(
     (t) => t.tipoTurno?.toUpperCase() === "ORDINARIO"
   );
+
+  // Items que se muestran en el dropdown:
+  const itemsDevotoParaMostrar = (Array.isArray(searchResults) && searchResults.length > 0)
+    ? searchResults
+    : sugerencias;
 
   const handleReservar = async () => {
     if (!devotoSeleccionado || !turnoSeleccionado || !tipoReserva) {
@@ -82,21 +110,21 @@ export const ReservaTurno = () => {
 
     const res = await reservar(payload);
 
-    if (res.error) {
+    if (res?.error) {
       toast.error(res.e?.response?.data?.error || "Error al reservar turno");
     } else {
       toast.success("Turno reservado correctamente");
       setProcesionSeleccionada("");
       setTurnoSeleccionado("");
       setTipoReserva("");
-      verFactura(res.compra?.noFactura)
+      if (res?.compra?.noFactura) verFactura(res.compra.noFactura);
     }
   };
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
       <NavbarAdmin />
-      
+
       <main className="flex-1 container mx-auto px-4 py-8">
         <div className="max-w-4xl mx-auto bg-white rounded-xl shadow-md overflow-hidden border border-gray-200">
           {/* Encabezado */}
@@ -116,7 +144,7 @@ export const ReservaTurno = () => {
                 <User className="h-5 w-5" />
                 Paso 1: Seleccionar Devoto
               </h2>
-              
+
               <div className="relative">
                 <Search className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
                 <input
@@ -124,34 +152,42 @@ export const ReservaTurno = () => {
                   className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#142130] focus:border-transparent"
                   placeholder="Buscar por nombre, apellido o DPI..."
                   value={busqueda}
-                  onChange={(e) => setBusqueda(e.target.value)}
+                  onChange={(e) => {
+                    setBusqueda(e.target.value);
+                    // abrir la lista ya que el useEffect la controla
+                  }}
                 />
               </div>
 
-              {/* Sugerencias */}
-              {sugerencias.length > 0 && (
+              {/* Sugerencias / resultados de búsqueda */}
+              {showDevotoList && itemsDevotoParaMostrar && itemsDevotoParaMostrar.length > 0 && (
                 <ul className="border border-gray-200 rounded-lg shadow-sm overflow-hidden">
-                  {sugerencias.map((d) => (
-                    <li
-                      key={d._id}
-                      className="p-3 hover:bg-[#142130]/5 cursor-pointer transition-colors border-b border-gray-100 last:border-0"
-                      onClick={() => {
-                        setDevotoSeleccionado(d._id);
-                        setSugerencias([]);
-                        setBusqueda(`${d.nombre} ${d.apellido}`);
-                      }}
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="bg-[#142130]/10 p-2 rounded-full">
-                          <User className="h-4 w-4 text-[#142130]" />
+                  {itemsDevotoParaMostrar.map((d) => {
+                    const keyId = d.uid || d._id || d.id;
+                    return (
+                      <li
+                        key={keyId}
+                        className="p-3 hover:bg-[#142130]/5 cursor-pointer transition-colors border-b border-gray-100 last:border-0"
+                        onClick={() => {
+                          // al seleccionar tomamos uid/_id (según lo que venga)
+                          setDevotoSeleccionado(d.uid || d._id || d.id);
+                          setSugerencias([]);
+                          setBusqueda(`${d.nombre} ${d.apellido}`);
+                          setShowDevotoList(false);
+                        }}
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="bg-[#142130]/10 p-2 rounded-full">
+                            <User className="h-4 w-4 text-[#142130]" />
+                          </div>
+                          <div>
+                            <p className="font-medium text-[#142130]">{d.nombre} {d.apellido}</p>
+                            <p className="text-sm text-gray-600">DPI: {d.DPI}</p>
+                          </div>
                         </div>
-                        <div>
-                          <p className="font-medium text-[#142130]">{d.nombre} {d.apellido}</p>
-                          <p className="text-sm text-gray-600">DPI: {d.DPI}</p>
-                        </div>
-                      </div>
-                    </li>
-                  ))}
+                      </li>
+                    );
+                  })}
                 </ul>
               )}
             </div>
@@ -184,7 +220,7 @@ export const ReservaTurno = () => {
                   <Calendar className="h-5 w-5" />
                   Paso 2: Seleccionar Procesión
                 </h2>
-                
+
                 <div className="relative">
                   <select
                     className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg appearance-none focus:ring-2 focus:ring-[#142130] focus:border-transparent"
@@ -210,7 +246,7 @@ export const ReservaTurno = () => {
                   <Clock className="h-5 w-5" />
                   Paso 3: Seleccionar Turno Ordinario
                 </h2>
-                
+
                 <div className="relative">
                   <select
                     className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg appearance-none focus:ring-2 focus:ring-[#142130] focus:border-transparent"
@@ -236,7 +272,7 @@ export const ReservaTurno = () => {
                   <CheckCircle className="h-5 w-5" />
                   Paso 4: Tipo de Reserva
                 </h2>
-                
+
                 <div className="relative">
                   <select
                     className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg appearance-none focus:ring-2 focus:ring-[#142130] focus:border-transparent"
@@ -255,9 +291,8 @@ export const ReservaTurno = () => {
             {/* Botón de reserva */}
             {tipoReserva && (
               <button
-                className={`w-full py-3 px-4 bg-[#142130] hover:bg-[#142130]/90 text-white font-medium rounded-lg transition-colors flex items-center justify-center gap-2 ${
-                  loadingReserva ? 'opacity-75 cursor-not-allowed' : ''
-                }`}
+                className={`w-full py-3 px-4 bg-[#142130] hover:bg-[#142130]/90 text-white font-medium rounded-lg transition-colors flex items-center justify-center gap-2 ${loadingReserva ? 'opacity-75 cursor-not-allowed' : ''
+                  }`}
                 onClick={handleReservar}
                 disabled={loadingReserva}
               >
