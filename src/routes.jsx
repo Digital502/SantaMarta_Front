@@ -16,6 +16,7 @@ import { ProcesionDetails } from "./components/procesiones/ProcesionDetails";
 import { Profile } from "./components/profile/Profile";
 import { RegisterUser } from "./components/user/RegisterUser";
 import { Users } from "./components/user/Users";
+import { VentasProcesion } from "./components/ventaProcesion/VentasProcesion";
 import { AuthPage } from "./pages/auth";
 import { DashboardAdminPage } from "./pages/dashboardAdmin";
 import { DashboardUserPage } from "./pages/dashboardUser";
@@ -42,5 +43,6 @@ export const routes = [
     {path: '/pago-ordinario', element: <PagoOrdinario/>},
     {path: '/pago-turno', element: <PagoTurno/>},
     {path: '/reservar-turno', element: <ReservaTurno/>},
+    {path: '/directiva/ventas-procesion', element: <PrivateRoute><VentasProcesion/></PrivateRoute>},
     {path: '*', element: <NotFound/>},
 ]

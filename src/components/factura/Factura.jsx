@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { NavbarAdmin } from "../navs/NavbarAdmin";
 import { Footer } from "../footer/Footer";
 import { useFactura } from "../../shared/hooks/useFactura";
-import { X, Download, Edit, Trash2, Search } from "lucide-react";
+import { X, Download, Edit, Trash2, Search, Calendar } from "lucide-react";
 import toast from "react-hot-toast";
 import { useCompra } from "../../shared/hooks/useCompra";
 
@@ -24,7 +24,8 @@ export const Factura = () => {
 
   const [showModal, setShowModal] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
-  const [searchTerm, setSearchTerm] = useState(""); // 🔹 Estado para búsqueda
+  const [terminoBusqueda, setTerminoBusqueda] = useState("");
+  const [fechaBusqueda, setFechaBusqueda] = useState("");
   const [editForm, setEditForm] = useState({
     noFactura: "",
     fechaFactura: "",
@@ -99,22 +100,28 @@ export const Factura = () => {
     }
   };
 
-  // 🔹 Filtrado de facturas según búsqueda
   const facturasFiltradas = facturas.filter((factura) => {
-    const buscar = searchTerm.toLowerCase();
+    const buscar = terminoBusqueda.toLowerCase();
     const noFactura = factura.noFactura?.toString().toLowerCase() || "";
-    const fechaFactura = new Date(factura.fechaFactura)
-      .toLocaleDateString()
+    const fechaFacturaLocal = new Date(factura.fechaFactura)
+      .toLocaleDateString("es-ES")
       .toLowerCase();
+    const fechaFacturaISO = new Date(factura.fechaFactura)
+      .toISOString()
+      .slice(0, 10); 
     const devoto = factura.devoto
       ? `${factura.devoto.nombre} ${factura.devoto.apellido}`.toLowerCase()
       : "";
 
-    return (
+    const coincideTexto =
       noFactura.includes(buscar) ||
-      fechaFactura.includes(buscar) ||
-      devoto.includes(buscar)
-    );
+      fechaFacturaLocal.includes(buscar) ||
+      devoto.includes(buscar);
+
+    const coincideFecha =
+      !fechaBusqueda || fechaFacturaISO === fechaBusqueda;
+
+    return coincideTexto && coincideFecha;
   });
 
   return (
@@ -125,20 +132,33 @@ export const Factura = () => {
           Lista de Facturas
         </h1>
         <br />
-        {/* 🔹 Barra de búsqueda */}
-        <div className="flex items-center mb-6 gap-2">
-          <div className="relative w-full">
-            <Search className="absolute left-3 top-2.5 text-gray-400" size={18} />
-            <input
-              type="text"
-              placeholder="Buscar por #Factura, Fecha o Devoto..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#426A73] outline-none"
-            />
+        <div className="grid md:grid-cols-2 gap-4 mb-6">
+          <div className="flex items-center mb-6 gap-2">
+            <div className="relative w-full">
+              <Search className="absolute left-3 top-2.5 text-gray-400" size={18} />
+              <input
+                type="text"
+                placeholder="Buscar por #Factura, Fecha o Devoto..."
+                value={terminoBusqueda}
+                onChange={(e) => setTerminoBusqueda(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#426A73] outline-none"
+              />
+            </div>
+          </div>
+          <div className="flex items-center mb-6 gap-3">
+            <div className="relative w-full">
+              <Calendar className="absolute left-3 top-2.5 text-gray-400" size={18} />
+              <input
+                type="date"
+                value={fechaBusqueda}
+                onChange={(e) => setFechaBusqueda(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 border rounded-lg 
+                 focus:ring-2 focus:ring-[#426A73] outline-none
+                 bg-white text-gray-700 hover:border-[#59818B] transition"
+              />
+            </div>
           </div>
         </div>
-
         {loading ? (
           <p className="text-center text-gray-500">Cargando facturas...</p>
         ) : error ? (
@@ -190,216 +210,216 @@ export const Factura = () => {
         )}
         {/* Modal Detalles */}
         {showModal && facturaSeleccionada && (
-        <div
+          <div
             className="fixed inset-0 z-50 flex items-start justify-center bg-black/60 bg-opacity-50 backdrop-blur-sm py-10 overflow-y-auto"
             onClick={() => {
-            setShowModal(false);
-            setIsEditing(false);
+              setShowModal(false);
+              setIsEditing(false);
             }}
-        >
+          >
             <div
-            className="bg-white rounded-xl w-full max-w-2xl mx-4 my-8 p-6 relative shadow-2xl"
-            onClick={(e) => e.stopPropagation()}
+              className="bg-white rounded-xl w-full max-w-2xl mx-4 my-8 p-6 relative shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
             >
-            <button
+              <button
                 className="absolute top-4 right-4 text-gray-500 hover:text-[#426A73] transition-colors"
                 onClick={() => {
-                setShowModal(false);
-                setIsEditing(false);
+                  setShowModal(false);
+                  setIsEditing(false);
                 }}
                 aria-label="Cerrar modal"
-            >
+              >
                 <X size={24} />
-            </button>
+              </button>
 
-            <h2 className="text-2xl font-bold text-[#426A73] mb-6 border-b pb-3">
+              <h2 className="text-2xl font-bold text-[#426A73] mb-6 border-b pb-3">
                 {isEditing ? "Editar Factura" : "Detalles de la Factura"}
-            </h2>
+              </h2>
 
-            <div className="max-h-[70vh] overflow-y-auto pr-2">
+              <div className="max-h-[70vh] overflow-y-auto pr-2">
                 {isEditing ? (
-                <form onSubmit={handleEditSubmit} className="space-y-4">
+                  <form onSubmit={handleEditSubmit} className="space-y-4">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
+                      <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Número de Factura
+                          Número de Factura
                         </label>
                         <input
-                        type="text"
-                        name="noFactura"
-                        value={editForm.noFactura}
-                        onChange={handleEditChange}
-                        required
-                        className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#426A73] focus:border-transparent"
+                          type="text"
+                          name="noFactura"
+                          value={editForm.noFactura}
+                          onChange={handleEditChange}
+                          required
+                          className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#426A73] focus:border-transparent"
                         />
-                    </div>
+                      </div>
 
-                    <div>
+                      <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Fecha de Factura
+                          Fecha de Factura
                         </label>
                         <input
-                        type="date"
-                        name="fechaFactura"
-                        value={editForm.fechaFactura}
-                        onChange={handleEditChange}
-                        required
-                        className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#426A73] focus:border-transparent"
+                          type="date"
+                          name="fechaFactura"
+                          value={editForm.fechaFactura}
+                          onChange={handleEditChange}
+                          required
+                          className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#426A73] focus:border-transparent"
                         />
-                    </div>
+                      </div>
                     </div>
 
                     <div className="flex items-center gap-2 mt-2">
-                    <input
+                      <input
                         type="checkbox"
                         name="state"
                         id="state"
                         checked={editForm.state}
                         onChange={handleEditChange}
                         className="rounded text-[#426A73] focus:ring-[#426A73]"
-                    />
-                    <label htmlFor="state" className="text-sm text-gray-700">
+                      />
+                      <label htmlFor="state" className="text-sm text-gray-700">
                         Activa
-                    </label>
+                      </label>
                     </div>
 
                     <div className="flex justify-end gap-3 pt-6 border-t border-gray-200 mt-6">
-                    <button
+                      <button
                         type="button"
                         onClick={() => setIsEditing(false)}
                         className="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors"
-                    >
+                      >
                         Cancelar
-                    </button>
-                    <button
+                      </button>
+                      <button
                         type="submit"
                         className="px-4 py-2 rounded-lg bg-[#426A73] text-white hover:bg-[#2B535C] transition-colors"
-                    >
+                      >
                         Guardar Cambios
-                    </button>
+                      </button>
                     </div>
-                </form>
+                  </form>
                 ) : (
-                <div className="space-y-4">
+                  <div className="space-y-4">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="bg-gray-50 p-3 rounded-lg">
+                      <div className="bg-gray-50 p-3 rounded-lg">
                         <p className="text-sm text-gray-500">Número de Factura</p>
                         <p className="font-medium">{facturaSeleccionada.noFactura}</p>
-                    </div>
-                    <div className="bg-gray-50 p-3 rounded-lg">
+                      </div>
+                      <div className="bg-gray-50 p-3 rounded-lg">
                         <p className="text-sm text-gray-500">Fecha de Factura</p>
                         <p className="font-medium">
-                        {new Date(facturaSeleccionada.fechaFactura).toLocaleDateString()}
+                          {new Date(facturaSeleccionada.fechaFactura).toLocaleDateString()}
                         </p>
-                    </div>
+                      </div>
                     </div>
 
                     <div className="bg-gray-50 p-4 rounded-lg">
-                    <h3 className="font-semibold text-[#426A73] mb-3">Datos del Devoto</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      <h3 className="font-semibold text-[#426A73] mb-3">Datos del Devoto</h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                         <div>
-                        <p className="text-sm text-gray-500">Nombre</p>
-                        <p className="font-medium">
+                          <p className="text-sm text-gray-500">Nombre</p>
+                          <p className="font-medium">
                             {facturaSeleccionada.devoto?.nombre || "N/A"} {facturaSeleccionada.devoto?.apellido || ""}
-                        </p>
+                          </p>
                         </div>
                         <div>
-                        <p className="text-sm text-gray-500">DPI</p>
-                        <p className="font-medium">{facturaSeleccionada.devoto?.DPI || "N/A"}</p>
+                          <p className="text-sm text-gray-500">DPI</p>
+                          <p className="font-medium">{facturaSeleccionada.devoto?.DPI || "N/A"}</p>
                         </div>
                         <div>
-                        <p className="text-sm text-gray-500">Email</p>
-                        <p className="font-medium">{facturaSeleccionada.devoto?.email || "N/A"}</p>
+                          <p className="text-sm text-gray-500">Email</p>
+                          <p className="font-medium">{facturaSeleccionada.devoto?.email || "N/A"}</p>
                         </div>
                         <div>
-                        <p className="text-sm text-gray-500">Teléfono</p>
-                        <p className="font-medium">{facturaSeleccionada.devoto?.telefono || "N/A"}</p>
+                          <p className="text-sm text-gray-500">Teléfono</p>
+                          <p className="font-medium">{facturaSeleccionada.devoto?.telefono || "N/A"}</p>
                         </div>
                         <div className="md:col-span-2">
-                        <p className="text-sm text-gray-500">Contraseña</p>
-                        <p className="font-medium">
+                          <p className="text-sm text-gray-500">Contraseña</p>
+                          <p className="font-medium">
                             {facturaSeleccionada.contraseñaAsociada || "No asignada"}
-                        </p>
+                          </p>
                         </div>
-                    </div>
+                      </div>
                     </div>
 
                     <div className="bg-gray-50 p-4 rounded-lg">
-                    <h3 className="font-semibold text-[#426A73] mb-3">Datos del Turno</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      <h3 className="font-semibold text-[#426A73] mb-3">Datos del Turno</h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                         <div>
-                        <p className="text-sm text-gray-500">Número de Turno</p>
-                        <p className="font-medium">{facturaSeleccionada.turno?.noTurno || "N/A"}</p>
+                          <p className="text-sm text-gray-500">Número de Turno</p>
+                          <p className="font-medium">{facturaSeleccionada.turno?.noTurno || "N/A"}</p>
                         </div>
                         <div>
-                        <p className="text-sm text-gray-500">Marcha</p>
-                        <p className="font-medium">{facturaSeleccionada.turno?.marcha || "N/A"}</p>
+                          <p className="text-sm text-gray-500">Marcha</p>
+                          <p className="font-medium">{facturaSeleccionada.turno?.marcha || "N/A"}</p>
                         </div>
                         <div>
-                        <p className="text-sm text-gray-500">Precio</p>
-                        <p className="font-medium">
+                          <p className="text-sm text-gray-500">Precio</p>
+                          <p className="font-medium">
                             {facturaSeleccionada.turno?.precio ? `Q${facturaSeleccionada.turno.precio}` : "N/A"}
-                        </p>
+                          </p>
                         </div>
                         <div>
-                        <p className="text-sm text-gray-500">Procesión</p>
-                        <p className="font-medium">
+                          <p className="text-sm text-gray-500">Procesión</p>
+                          <p className="font-medium">
                             {facturaSeleccionada.turno?.procesion?.nombre || "N/A"}
-                        </p>
+                          </p>
                         </div>
                         <div className="md:col-span-2">
-                        <p className="text-sm text-gray-500">Fecha Procesión</p>
-                        <p className="font-medium">
+                          <p className="text-sm text-gray-500">Fecha Procesión</p>
+                          <p className="font-medium">
                             {facturaSeleccionada.turno?.procesion?.fecha
-                            ? new Date(facturaSeleccionada.turno.procesion.fecha).toLocaleDateString()
-                            : "N/A"}
-                        </p>
+                              ? new Date(facturaSeleccionada.turno.procesion.fecha).toLocaleDateString()
+                              : "N/A"}
+                          </p>
                         </div>
-                    </div>
+                      </div>
                     </div>
 
                     <div className="bg-gray-50 p-4 rounded-lg">
-                    <h3 className="font-semibold text-[#426A73] mb-3">Datos del Usuario</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      <h3 className="font-semibold text-[#426A73] mb-3">Datos del Usuario</h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                         <div>
-                        <p className="text-sm text-gray-500">Registrado por</p>
-                        <p className="font-medium">{facturaSeleccionada.usuario?.nombre || "N/A"}</p>
+                          <p className="text-sm text-gray-500">Registrado por</p>
+                          <p className="font-medium">{facturaSeleccionada.usuario?.nombre || "N/A"}</p>
                         </div>
                         <div>
-                        <p className="text-sm text-gray-500">Email</p>
-                        <p className="font-medium">{facturaSeleccionada.usuario?.email || "N/A"}</p>
+                          <p className="text-sm text-gray-500">Email</p>
+                          <p className="font-medium">{facturaSeleccionada.usuario?.email || "N/A"}</p>
                         </div>
-                    </div>
+                      </div>
                     </div>
                     <div className="flex justify-end gap-3 pt-6 border-t border-gray-200 mt-4">
-                    <button
-                      onClick={() => verFactura(facturaSeleccionada.noFactura)}
-                      className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[#426A73] text-white hover:bg-[#2B535C] transition-colors"
-                    >
-                      <Download size={18} />
-                      Descargar Factura
-                    </button>
-                    <button
+                      <button
+                        onClick={() => verFactura(facturaSeleccionada.noFactura)}
+                        className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[#426A73] text-white hover:bg-[#2B535C] transition-colors"
+                      >
+                        <Download size={18} />
+                        Descargar Factura
+                      </button>
+                      <button
                         onClick={() => setIsEditing(true)}
                         className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[#426A73] text-white hover:bg-[#2B535C] transition-colors"
-                    >
+                      >
                         <Edit size={18} />
                         Editar
-                    </button>
+                      </button>
 
-                    <button
+                      <button
                         onClick={handleEliminar}
                         className="flex items-center gap-2 px-4 py-2 rounded-lg border border-red-600 text-red-600 hover:bg-red-50 transition-colors"
-                    >
+                      >
                         <Trash2 size={18} />
                         Eliminar
-                    </button>
+                      </button>
                     </div>
-                </div>
+                  </div>
                 )}
+              </div>
             </div>
-            </div>
-        </div>
+          </div>
         )}
       </main>
       <Footer />

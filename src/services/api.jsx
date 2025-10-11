@@ -510,3 +510,15 @@ export const getSearchDevotos = async (query, page, limit) => {
     };
   }
 };
+
+export const getVentasProcesion = async (procesionId) => {
+  try {
+    const response = await apiClient.get(`/compra/ventasPorProcesion/${procesionId}`);
+    return response.data;
+  } catch (e) {
+    return {
+      error: true, 
+        e,
+    };
+  }
+};

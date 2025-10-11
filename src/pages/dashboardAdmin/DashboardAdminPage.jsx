@@ -6,7 +6,7 @@ import {
   BookOpen,
   CheckSquare,
   DollarSign,
-  Archive,
+  Lock,
   Download,
   File
 } from 'lucide-react';
@@ -19,6 +19,11 @@ export const DashboardAdminPage = () => {
   const [menuOpen, setMenuOpen] = useState(false);
   const { user } = useUserDetails();
   const profileRef = useRef();
+  const [modalOpen, setModalOpen] = useState(false);
+  const [passwordInput, setPasswordInput] = useState("");
+  const [passwordError, setPasswordError] = useState("");
+  const [pendingNavigation, setPendingNavigation] = useState(null);
+  const CONTRASEÑA_DEFAULT = "SMredentor#?2527";
 
   useEffect(() => {
     const handler = (e) => {
@@ -31,6 +36,22 @@ export const DashboardAdminPage = () => {
   }, []);
 
   const navigate = useNavigate();
+
+  const handleProtectedNavigation = (ruta) => {
+    setPendingNavigation(ruta);
+    setPasswordInput("");
+    setPasswordError("");
+    setModalOpen(true);
+  };
+
+  const handlePasswordSubmit = () => {
+    if (passwordInput === CONTRASEÑA_DEFAULT) {
+      setModalOpen(false);
+      navigate(pendingNavigation);
+    } else {
+      setPasswordError("Contraseña incorrecta. Intente nuevamente.");
+    }
+  };
 
   return (
     <div className="flex flex-col min-h-screen bg-[#E0E1DD] text-[#0D1B2A]">
@@ -100,6 +121,12 @@ export const DashboardAdminPage = () => {
               route="/directiva/facturas"
               navigate={navigate}
             />
+            <Card
+              title="Total Ventas por Procesión"
+              icon={<DollarSign size={28} />}
+              description="Accede al resumen completo de ventas por procesión. Se requiere autorización."
+              onClick={() => handleProtectedNavigation("/directiva/ventas-procesion")}
+            />
           </div>
         </section>
 
@@ -135,13 +162,45 @@ export const DashboardAdminPage = () => {
       </main>
 
       <Footer />
+      {modalOpen && (
+        <div className="fixed inset-0 flex items-center justify-center backdrop-blur z-50">
+          <div className="bg-white/90 backdrop-blur-md rounded-2xl p-6 w-96 shadow-2xl relative animate-fadeIn">
+            <div className="flex flex-col items-center">
+              <Lock size={36} className="text-[#426A73] mb-4" />
+              <h3 className="text-2xl font-bold mb-4 text-[#0D1B2A]">Ingrese Contraseña</h3>
+              <input
+                type="password"
+                value={passwordInput}
+                onChange={(e) => setPasswordInput(e.target.value)}
+                placeholder="Contraseña"
+                className="w-full border border-gray-300 rounded-lg px-4 py-2 mb-2 focus:outline-none focus:ring-2 focus:ring-[#426A73] bg-white/80 text-gray-800"
+              />
+              {passwordError && <p className="text-red-600 text-sm mb-2">{passwordError}</p>}
+              <div className="flex justify-between mt-4 w-full gap-4">
+                <button
+                  onClick={() => setModalOpen(false)}
+                  className="flex-1 px-4 py-2 rounded-lg border border-gray-300 hover:bg-gray-100 text-gray-700 font-medium transition"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={handlePasswordSubmit}
+                  className="flex-1 px-4 py-2 rounded-lg bg-[#426A73] hover:bg-[#59818B] text-white font-medium transition"
+                >
+                  Ingresar
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
 
-const Card = ({ title, icon, description, route, navigate }) => (
+const Card = ({ title, icon, description, route, navigate, onClick }) => (
   <div
-    onClick={() => navigate(route)}
+    onClick={onClick ? onClick : () => navigate(route)}
     className="bg-white p-6 rounded-2xl border border-gray-200 shadow-md hover:shadow-xl hover:scale-[1.03] transition-all duration-300 flex flex-col items-center text-center cursor-pointer group"
   >
     <div className="text-[#1B263B] mb-3 group-hover:text-[#415A77] transition">
@@ -155,3 +214,4 @@ const Card = ({ title, icon, description, route, navigate }) => (
     )}
   </div>
 );
+
